@@ -258,7 +258,7 @@ def load_examples():
         path_queue = tf.train.string_input_producer(input_paths, shuffle=a.mode == "train")
         reader = tf.WholeFileReader()
         paths, contents = reader.read(path_queue)
-        raw_input = decode(contents)
+        raw_input = decode(contents, channels=3) # https://github.com/affinelayer/pix2pix-tensorflow/issues/26
         raw_input = tf.image.convert_image_dtype(raw_input, dtype=tf.float32)
 
         assertion = tf.assert_equal(tf.shape(raw_input)[2], 3, message="image does not have 3 channels")

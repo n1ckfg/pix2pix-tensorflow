@@ -1,14 +1,16 @@
-# pix2pix-tensorflow
+# Changes compared to [affinelayer/pix2pix-tensorflow](https://github.com/affinelayer/pix2pix-tensorflow)
 
-### Extra Dependencies:
-ImageMagick
-Autotrace
+- Input, output size increased to 1024 - more layers!
+
+My [Face2face](https://github.com/karolmajek/face2face-demo) was the reason.
+
+----------------------------------
+
+# pix2pix-tensorflow
 
 Based on [pix2pix](https://phillipi.github.io/pix2pix/) by Isola et al.
 
 [Article about this implemention](https://affinelayer.com/pix2pix/)
-
-[Interactive Demo](https://affinelayer.com/pixsrv/)
 
 Tensorflow implementation of pix2pix.  Learns a mapping from input images to output images, like these examples from the original paper:
 
@@ -19,7 +21,7 @@ This port is based directly on the torch implementation, and not on an existing 
 ## Setup
 
 ### Prerequisites
-- Tensorflow 1.4.1
+- Tensorflow 1.0.0
 
 ### Recommended
 - Linux with Tensorflow GPU edition + cuDNN
@@ -77,15 +79,15 @@ For example:
 
 <img src="docs/418.png" width="256px"/>
 
-Some datasets have been made available by the authors of the pix2pix paper.  To download those datasets, use the included script `tools/download-dataset.py`.  There are also links to pre-trained models alongside each dataset, note that these pre-trained models require the current version of pix2pix.py:
+Some datasets have been made available by the authors of the pix2pix paper.  To download those datasets, use the included script `tools/download-dataset.py`.  There are also links to pre-trained models alongside each dataset, note that these pre-trained models require the Tensorflow 0.12.1 version of pix2pix.py since they have not been regenerated with the 1.0.0 release:
 
 | dataset | example |
 | --- | --- |
-| `python tools/download-dataset.py facades` <br> 400 images from [CMP Facades dataset](http://cmp.felk.cvut.cz/~tylecr1/facade/). (31MB) <br> Pre-trained: [BtoA](https://mega.nz/#!H0AmER7Y!pBHcH4M11eiHBmJEWvGr-E_jxK4jluKBUlbfyLSKgpY)  | <img src="docs/facades.jpg" width="256px"/> |
-| `python tools/download-dataset.py cityscapes` <br> 2975 images from the [Cityscapes training set](https://www.cityscapes-dataset.com/). (113M) <br> Pre-trained: [AtoB](https://mega.nz/#!K1hXlbJA!rrZuEnL3nqOcRhjb-AnSkK0Ggf9NibhDymLOkhzwuQk) [BtoA](https://mega.nz/#!y1YxxB5D!1817IXQFcydjDdhk_ILbCourhA6WSYRttKLrGE97q7k) | <img src="docs/cityscapes.jpg" width="256px"/> |
-| `python tools/download-dataset.py maps` <br> 1096 training images scraped from Google Maps (246M) <br> Pre-trained: [AtoB](https://mega.nz/#!7oxklCzZ!8fRZoF3jMRS_rylCfw2RNBeewp4DFPVE_tSCjCKr-TI) [BtoA](https://mega.nz/#!S4AGzQJD!UH7B5SV7DJSTqKvtbFKqFkjdAh60kpdhTk9WerI-Q1I) | <img src="docs/maps.jpg" width="256px"/> |
-| `python tools/download-dataset.py edges2shoes` <br> 50k training images from [UT Zappos50K dataset](http://vision.cs.utexas.edu/projects/finegrained/utzap50k/). Edges are computed by [HED](https://github.com/s9xie/hed) edge detector + post-processing. (2.2GB) <br> Pre-trained: [AtoB](https://mega.nz/#!u9pnmC4Q!2uHCZvHsCkHBJhHZ7xo5wI-mfekTwOK8hFPy0uBOrb4) | <img src="docs/edges2shoes.jpg" width="256px"/>  |
-| `python tools/download-dataset.py edges2handbags` <br> 137K Amazon Handbag images from [iGAN project](https://github.com/junyanz/iGAN). Edges are computed by [HED](https://github.com/s9xie/hed) edge detector + post-processing. (8.6GB) <br> Pre-trained: [AtoB](https://mega.nz/#!G1xlDCIS!sFDN3ZXKLUWU1TX6Kqt7UG4Yp-eLcinmf6HVRuSHjrM) | <img src="docs/edges2handbags.jpg" width="256px"/> |
+| `python tools/download-dataset.py facades` <br> 400 images from [CMP Facades dataset](http://cmp.felk.cvut.cz/~tylecr1/facade/). (31MB) <br> Pre-trained: [BtoA](https://mega.nz/#!2xpyQBoK!GVtkZN7lqY4aaZltMFdZsPNVE6bUsWyiVUN6RwJtIxQ)  | <img src="docs/facades.jpg" width="256px"/> |
+| `python tools/download-dataset.py cityscapes` <br> 2975 images from the [Cityscapes training set](https://www.cityscapes-dataset.com/). (113M) <br> Pre-trained: [AtoB](https://mega.nz/#!rxByxK6S!W9ZBUqgdGTFDWVlOE_ljVt1G3bU89bdu_nS9Bi1ujiA) [BtoA](https://mega.nz/#!b1olDbhL!mxsYC5AF_WH64CXoukN0KB-nw15kLQ0Etii-F-HDTps) | <img src="docs/cityscapes.jpg" width="256px"/> |
+| `python tools/download-dataset.py maps` <br> 1096 training images scraped from Google Maps (246M) <br> Pre-trained: [AtoB](https://mega.nz/#!i8pkkBJT!3NKLar9sUr-Vh_vNVQF-xwK9-D9iCqaCmj1T27xRf4w) [BtoA](https://mega.nz/#!r8xwCBCD!lNBrY_2QO6pyUJziGj7ikPheUL_yXA8xGXFlM3GPL3c) | <img src="docs/maps.jpg" width="256px"/> |
+| `python tools/download-dataset.py edges2shoes` <br> 50k training images from [UT Zappos50K dataset](http://vision.cs.utexas.edu/projects/finegrained/utzap50k/). Edges are computed by [HED](https://github.com/s9xie/hed) edge detector + post-processing. (2.2GB) <br> Pre-trained: [AtoB](https://mega.nz/#!OoYT3QiQ!8y3zLESvhOyeA6UsjEbcJphi3_uEt534waSL5_f_D4Y) | <img src="docs/edges2shoes.jpg" width="256px"/>  |
+| `python tools/download-dataset.py edges2handbags` <br> 137K Amazon Handbag images from [iGAN project](https://github.com/junyanz/iGAN). Edges are computed by [HED](https://github.com/s9xie/hed) edge detector + post-processing. (8.6GB) <br> Pre-trained: [AtoB](https://mega.nz/#!KlpBHKrZ!iJ3x6xzgk0wnJkPiAf0UxPzhYSmpC3kKH1DY5n_dd0M) | <img src="docs/edges2handbags.jpg" width="256px"/> |
 
 The `facades` dataset is the smallest and easiest to get started with.
 

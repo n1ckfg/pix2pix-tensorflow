@@ -6,58 +6,61 @@ import subprocess
 import os
 import sys
 import time
-import shutil
-import shlex
+import argparse
 
-INPUT_DIR = os.path.abspath("../data")
-OUTPUT_DIR = os.path.expanduser("~/data/pix2pix/test")
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--long", action="store_true")
+a = parser.parse_args()
+
+
+def run(cmd, image="affinelayer/pix2pix-tensorflow"):
+    docker = "docker"
+    if sys.platform.startswith("linux"):
+        docker = "nvidia-docker"
+
+    datapath = os.path.abspath("../data")
+    prefix = [docker, "run", "--rm", "--volume", os.getcwd() + ":/prj", "--volume", datapath + ":/data", "--workdir", "/prj", "--env", "PYTHONUNBUFFERED=x", "--volume", "/tmp/cuda-cache:/cuda-cache", "--env", "CUDA_CACHE_PATH=/cuda-cache", image]
+    args = prefix + cmd.split(" ")
+    print(" ".join(args))
+    subprocess.check_call(args)
 
 
 def main():
     start = time.time()
 
-    images = {
-        "affinelayer": "affinelayer/pix2pix-tensorflow:v3",
-        # "py2-tensorflow": "tensorflow/tensorflow:1.4.1-gpu",
-        # "py3-tensorflow": "tensorflow/tensorflow:1.4.1-gpu-py3",
-    }
+    if a.long:
+        run("python pix2pix.py --mode train --output_dir test/facades_BtoA_train --max_epochs 200 --input_dir /data/official/facades/train --which_direction BtoA --seed 0")
+        run("python pix2pix.py --mode test --output_dir test/facades_BtoA_test --input_dir /data/official/facades/val --seed 0 --checkpoint test/facades_BtoA_train")
 
-    if os.path.exists(OUTPUT_DIR):
-        shutil.rmtree(OUTPUT_DIR)
-
-    for image_name, image in images.items():
-        def run(cmd):
-            docker = "docker"
-            if sys.platform.startswith("linux"):
-                docker = "nvidia-docker"
-
-            prefix = [docker, "run", "--rm", "--volume", os.getcwd() + ":/prj", "--volume", INPUT_DIR + ":/input", "--volume", os.path.join(OUTPUT_DIR, image_name) + ":/output","--workdir", "/prj", "--env", "PYTHONUNBUFFERED=x", "--volume", "/tmp/cuda-cache:/cuda-cache", "--env", "CUDA_CACHE_PATH=/cuda-cache", image]
-            args = prefix + shlex.split(cmd)
-            print(" ".join(args))
-            subprocess.check_call(args)
-
-        run("python tools/process.py --input_dir /input/pusheen/original --operation resize --output_dir /output/process_resize")
-        if image_name == "affinelayer":
-            run("python tools/process.py --input_dir /output/process_resize --operation edges --output_dir /output/process_edges")
-
+        run("python pix2pix.py --mode train --output_dir test/color-lab_AtoB_train --max_epochs 10 --input_dir /data/color-lab/train --which_direction AtoB --seed 0 --lab_colorization")
+        run("python pix2pix.py --mode test --output_dir test/color-lab_AtoB_test --input_dir /data/color-lab/val --seed 0 --checkpoint test/color-lab_AtoB_train")
+    else:
+        # training
         for direction in ["AtoB", "BtoA"]:
-            for dataset in ["facades", "maps"]:
+            for dataset in ["facades"]:
                 name = dataset + "_" + direction
-                run("python pix2pix.py --mode train --input_dir /input/official/%s/train --output_dir /output/%s_train --display_freq 1 --max_steps 1 --which_direction %s --seed 0" % (dataset, name, direction))
-                run("python pix2pix.py --mode test --input_dir /input/official/%s/val --output_dir /output/%s_test --display_freq 1 --max_steps 1 --checkpoint /output/%s_train --seed 0" % (dataset, name, name))
+                run("python pix2pix.py --mode train --output_dir test/%s_train --max_steps 1 --input_dir /data/official/%s/train --which_direction %s --seed 0" % (name, dataset, direction))
+                run("python pix2pix.py --mode test --output_dir test/%s_test --max_steps 1 --input_dir /data/official/%s/val --seed 0 --checkpoint test/%s_train" % (name, dataset, name))
 
+            # test lab colorization
             dataset = "color-lab"
             name = dataset + "_" + direction
-            run("python pix2pix.py --mode train --input_dir /input/%s/train --output_dir /output/%s_train --display_freq 1 --max_steps 1 --which_direction %s --lab_colorization --seed 0" % (dataset, name, direction))
-            run("python pix2pix.py --mode test --input_dir /input/%s/val --output_dir /output/%s_test --display_freq 1 --max_steps 1 --checkpoint /output/%s_train --seed 0" % (dataset, name, name))
+            run("python pix2pix.py --mode train --output_dir test/%s_train --max_steps 1 --input_dir /data/%s/train --which_direction %s --seed 0 --lab_colorization" % (name, dataset, direction))
+            run("python pix2pix.py --mode test --output_dir test/%s_test --max_steps 1 --input_dir /data/%s/val --seed 0 --checkpoint test/%s_train" % (name, dataset, name))
 
-        # using pretrained model
+        # using pretrained model (can't use pretrained models from tensorflow 0.12, so disabled for now)
         # for dataset, direction in [("facades", "BtoA")]:
         #     name = dataset + "_" + direction
-        #     run("python pix2pix.py --mode test --output_dir test/%s_pretrained_test --input_dir /input/official/%s/val --max_steps 100 --which_direction %s --seed 0 --checkpoint /input/pretrained/%s" % (name, dataset, direction, name))
-        #     run("python pix2pix.py --mode export --output_dir test/%s_pretrained_export --checkpoint /input/pretrained/%s" % (name, name))
+        #     run("python pix2pix.py --mode test --output_dir test/%s_pretrained_test --input_dir /data/official/%s/val --max_steps 100 --which_direction %s --seed 0 --checkpoint /data/pretrained/%s" % (name, dataset, direction, name))
+        #     run("python pix2pix.py --mode export --output_dir test/%s_pretrained_export --checkpoint /data/pretrained/%s" % (name, name))
+
+        # test python3
+        run("python pix2pix.py --mode train --output_dir test/py3_facades_AtoB_train --max_steps 1 --input_dir /data/official/facades/train --which_direction AtoB --seed 0", image="tensorflow/tensorflow:1.0.0-gpu-py3")
+        run("python pix2pix.py --mode test --output_dir test/py3_facades_AtoB_test --max_steps 1 --input_dir /data/official/facades/val --seed 0 --checkpoint test/py3_facades_AtoB_train", image="tensorflow/tensorflow:1.0.0-gpu-py3")
 
     print("elapsed", int(time.time() - start))
+    # long: about 9 hours (linux)
 
 
 main()

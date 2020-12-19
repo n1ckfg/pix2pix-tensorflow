@@ -559,6 +559,7 @@ def append_index(filesets, step=False):
         index.write("</tr>")
     return index_path
 
+'''
 import os
 #import IPython
 import sys
@@ -570,6 +571,7 @@ import pygame
 from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
+'''
 
 def main():
     if tf.__version__.split('.')[0] != "1":
@@ -664,6 +666,7 @@ def main():
             export_saver.save(sess, os.path.join(a.output_dir, "export"), write_meta_graph=False)
 
         return
+    '''
     elif a.mode == "spout":
         print("spout mode")
 
@@ -842,7 +845,7 @@ def main():
                         sys.exit()
 
         return
-
+    '''
     examples = load_examples()
     print("examples count = %d" % examples.count)
 

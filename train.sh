@@ -4,7 +4,6 @@ python pix2pix.py \
   --max_epochs 200 \
   --input_dir files/train \
   --which_direction AtoB \
-  --batch_size 8
 
 ./export_all.sh
 

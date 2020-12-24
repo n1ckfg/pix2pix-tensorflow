@@ -620,6 +620,10 @@ def main():
             export_saver.export_meta_graph(filename=os.path.join(a.output_dir, "export.meta"))
             export_saver.save(sess, os.path.join(a.output_dir, "export"), write_meta_graph=False)
 
+            #~
+            # https://github.com/memo/ofxMSATensorFlow/wiki/Kind-request-to-tensorflow-model-developers
+            #tf.train.write_graph(tf.graph_util.convert_variables_to_constants(sess, sess.graph_def, [node.name for node in tf.get_default_graph().as_graph_def().node]), a.output_dir, 'graph_frz.pb', as_text=False)
+            #~
         return
 
     examples = load_examples()

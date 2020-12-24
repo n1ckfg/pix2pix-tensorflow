@@ -4,7 +4,10 @@ from __future__ import print_function
 
 import os
 import sys
-import shlex
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--port", type=int, help="port to publish from the container")
 
 # from python 3.3 source
 # https://github.com/python/cpython/blob/master/Lib/shutil.py
@@ -70,13 +73,21 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
 
 
 def main():
-    cmd = sys.argv[1:]
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        if not args[i].startswith("--"):
+            break
+        i += 2
+    
+    a = parser.parse_args(args[:i])
+    cmd = args[i:]
 
     # check if nvidia-docker or docker are on path
     docker_path = which("nvidia-docker")
     if docker_path is None:
         docker_path = which("docker")
-
+    
     if docker_path is None:
         raise Exception("docker not found")
 
@@ -92,20 +103,14 @@ def main():
         "CUDA_CACHE_PATH=/host/tmp/cuda-cache",
     ]
 
-    if "CUDA_VISIBLE_DEVICES" in os.environ:
-        docker_args.extend(["--env", "CUDA_VISIBLE_DEVICES=%s" % os.environ["CUDA_VISIBLE_DEVICES"]])
+    if a.port is not None:
+        docker_args += ["--publish", "%d:%d" % (a.port, a.port)]
 
-    for i, arg in enumerate(cmd):
-        # change absolute paths
-        if arg.startswith("/"):
-            cmd[i] = "/host" + arg
-
-    args = [docker_path, "run"] + docker_args + ["affinelayer/pix2pix-tensorflow:v3"] + cmd
+    args = [docker_path, "run"] + docker_args + ["affinelayer/pix2pix-tensorflow:v2"] + cmd
 
     if not os.access("/var/run/docker.sock", os.R_OK):
         args = ["sudo"] + args
 
-    print("running", " ".join(shlex.quote(a) for a in args))
     os.execvp(args[0], args)
 
 

@@ -197,16 +197,21 @@ def main():
     print("checkpoint:     ", checkpoint)
     print("ngf=%d  separable_conv=%s" % (ngf, separable_conv))
 
-    # Float32 I/O graph — required for ONNX compatibility.
-    # Input:  [1, 256, 256, 3] float32 in [0, 1]
-    # Output: [1, 256, 256, 3] float32 in [0, 1]
-    input_image = tf.placeholder(tf.float32, shape=[1, CROP_SIZE, CROP_SIZE, 3],
+    # NCHW I/O so the ONNX model is compatible with ComfyUI (and most PyTorch-based runtimes).
+    # Input:  [1, 3, 256, 256] float32 in [0, 1]  (NCHW)
+    # Output: [1, 3, 256, 256] float32 in [0, 1]  (NCHW)
+    # Internally TF works in NHWC; transposes are baked into the frozen graph.
+    input_image = tf.placeholder(tf.float32, shape=[1, 3, CROP_SIZE, CROP_SIZE],
                                  name="input_image")
 
-    with tf.variable_scope("generator"):
-        batch_output = deprocess(create_generator(preprocess(input_image), 3, ngf, separable_conv))
+    # NCHW -> NHWC
+    input_nhwc = tf.transpose(input_image, perm=[0, 2, 3, 1])
 
-    output_image = tf.identity(batch_output, name="output_image")
+    with tf.variable_scope("generator"):
+        batch_output = deprocess(create_generator(preprocess(input_nhwc), 3, ngf, separable_conv))
+
+    # NHWC -> NCHW
+    output_image = tf.transpose(batch_output, perm=[0, 3, 1, 2], name="output_image")
 
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())

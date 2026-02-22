@@ -8,7 +8,7 @@ import argparse
 import os
 import json
 
-graph_util = tf.compat.v1.graph_util
+graph_util = tf.graph_util
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--checkpoint_dir", default="model/export", help="directory containing the exported checkpoint and options.json")

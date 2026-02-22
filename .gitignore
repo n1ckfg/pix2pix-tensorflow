@@ -4,3 +4,6 @@ test
 models
 .idea
 files
+.DS_Store
+__pycache__/
+model/

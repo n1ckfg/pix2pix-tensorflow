@@ -1,1 +1,1 @@
-python freeze.py --checkpoint_dir model/export --output_pb model/export/frozen_model.pb
+python freeze.py --checkpoint_dir model/export --output_pb model/export_frozen/frozen_model.pb
